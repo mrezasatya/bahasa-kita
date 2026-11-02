@@ -11,127 +11,91 @@
 <body>
   <main class="app" id="app" data-turn="me">
 
-    <!-- ===== Panel lawan bicara (diputar 180°) ===== -->
+    <!-- Lawan bicara (diputar 180°): hanya teks besar + satu tombol -->
     <section class="panel partner" id="partnerPanel" aria-label="Panel lawan bicara">
-      <div class="panel-inner">
-        <div class="panel-head">
-          <span class="lang-badge" id="partnerLangBadge">English</span>
-          <span class="status" id="partnerStatus" aria-live="polite"></span>
-        </div>
-        <div class="message" id="partnerMessage">
-          <p class="msg-label" id="partnerHeading">Message for you</p>
-          <p class="msg-big" id="partnerBig" dir="auto"></p>
-          <p class="msg-small" id="partnerSmall" dir="auto"></p>
-          <p class="msg-check" id="partnerCheck" dir="auto" hidden></p>
-          <p class="warn" id="partnerWarn" hidden></p>
-        </div>
-        <div class="panel-actions">
-          <button class="icon-btn" id="partnerReplay" type="button" aria-label="Putar ulang" disabled>🔊</button>
-          <button class="mic-btn" id="partnerMic" type="button">
-            <span class="mic-icon" aria-hidden="true">🎤</span>
-            <span class="mic-label" id="partnerMicLabel">Hold to speak</span>
-          </button>
-        </div>
+      <div class="message">
+        <p class="msg-big" id="partnerBig" dir="auto"></p>
+        <p class="msg-small" id="partnerSmall" dir="auto"></p>
       </div>
+      <button class="mic-btn" id="partnerMic" type="button">
+        <span aria-hidden="true">🎤</span> <span id="partnerMicLabel">Hold to speak</span>
+      </button>
     </section>
 
-    <!-- ===== Kontrol ===== -->
-    <section class="controls" aria-label="Pengaturan">
-      <div class="lang-row">
-        <label class="lang-select">
-          <span>Bahasa saya</span>
-          <select id="myLang"></select>
-        </label>
-        <button class="swap-btn" id="swapBtn" type="button" aria-label="Tukar bahasa">⇄</button>
-        <label class="lang-select">
-          <span>Bahasa lawan bicara</span>
-          <select id="partnerLang"></select>
-        </label>
-      </div>
-      <div class="situation-row" id="situationRow" role="radiogroup" aria-label="Situasi"></div>
-      <div id="extSlot"></div>
-    </section>
+    <!-- Satu baris pengaturan -->
+    <nav class="bar" aria-label="Bahasa">
+      <span class="my-lang" id="myLangLabel">Indonesia</span>
+      <span class="arrow" aria-hidden="true">→</span>
+      <select id="partnerLang" aria-label="Bahasa lawan bicara"></select>
+      <button class="icon-btn" id="settingsBtn" type="button" aria-label="Pengaturan">⚙️</button>
+    </nav>
 
-    <!-- ===== Panel saya ===== -->
+    <!-- Saya -->
     <section class="panel me" id="mePanel" aria-label="Panel saya">
-      <div class="panel-inner">
-        <div class="panel-head">
-          <span class="lang-badge" id="myLangBadge">Bahasa Indonesia</span>
-          <span class="status" id="meStatus" aria-live="polite">Siap</span>
+      <div class="message" aria-live="polite">
+        <p class="msg-hint" id="meHint">Tahan 🎤 lalu bicara</p>
+        <p class="msg-big" id="meBig" dir="auto"></p>
+        <p class="msg-small" id="meSmall" dir="auto"></p>
+        <div class="check-box" id="meCheck" hidden>
+          <p class="check-label">Artinya:</p>
+          <p class="check-text" id="meCheckText" dir="auto"></p>
         </div>
-        <div class="message" id="meMessage">
-          <p class="msg-hint" id="meHint">Tahan tombol mikrofon, bicara, lalu lepas. Atau ketuk sekali untuk mulai.</p>
-          <p class="msg-big" id="meBig" dir="auto"></p>
-          <p class="msg-small" id="meSmall" dir="auto"></p>
-          <div class="check-box" id="meCheck" hidden>
-            <p class="check-label">✅ Terjemahan balik — apakah maksud Anda sudah benar?</p>
-            <p class="check-text" id="meCheckText" dir="auto"></p>
-          </div>
-          <p class="warn" id="meWarn" hidden></p>
-          <p class="error" id="meError" role="alert" hidden></p>
-        </div>
-        <div class="panel-actions">
-          <button class="icon-btn" id="meReplay" type="button" aria-label="Putar ulang suara terjemahan" disabled>🔊</button>
-          <button class="mic-btn" id="meMic" type="button">
-            <span class="mic-icon" aria-hidden="true">🎤</span>
-            <span class="mic-label" id="meMicLabel">Tahan untuk bicara</span>
-          </button>
-          <button class="icon-btn" id="typeBtn" type="button" aria-label="Ketik kalimat">⌨️</button>
-        </div>
-        <div class="bottom-row">
-          <button class="pill-btn" id="phrasesBtn" type="button">💬 Frasa cepat</button>
-          <button class="pill-btn turn-btn" id="turnBtn" type="button">🔄 Giliran lawan bicara</button>
-          <button class="pill-btn ghost" id="infoBtn" type="button" aria-label="Info, privasi, dan disclaimer">ⓘ</button>
-        </div>
+        <p class="note" id="meNote" hidden></p>
+      </div>
+      <div class="actions">
+        <button class="icon-btn" id="replayBtn" type="button" aria-label="Putar ulang suara" disabled>🔊</button>
+        <button class="mic-btn" id="meMic" type="button">
+          <span aria-hidden="true">🎤</span> <span id="meMicLabel">Tahan untuk bicara</span>
+        </button>
+        <button class="icon-btn" id="phrasesBtn" type="button" aria-label="Frasa cepat dan ketik">💬</button>
       </div>
     </section>
   </main>
 
-  <!-- ===== Sheet: frasa cepat ===== -->
+  <!-- Frasa cepat + situasi + ketik -->
   <div class="sheet" id="phrasesSheet" hidden>
-    <div class="sheet-card" role="dialog" aria-modal="true" aria-labelledby="phrasesTitle">
+    <div class="sheet-card" role="dialog" aria-modal="true" aria-label="Frasa cepat">
       <div class="sheet-head">
-        <h2 id="phrasesTitle">Frasa cepat</h2>
+        <h2>Frasa cepat</h2>
         <button class="icon-btn small" type="button" data-close aria-label="Tutup">✕</button>
       </div>
-      <p class="sheet-sub" id="phrasesSub"></p>
+      <div class="chips" id="situationRow" role="radiogroup" aria-label="Situasi"></div>
       <ul class="phrase-list" id="phraseList"></ul>
+      <form class="type-row" id="typeForm">
+        <input id="typeInput" type="text" maxlength="500" placeholder="Atau ketik sendiri…" autocomplete="off">
+        <button class="primary-btn" type="submit" aria-label="Terjemahkan">➜</button>
+      </form>
     </div>
   </div>
 
-  <!-- ===== Sheet: ketik ===== -->
-  <div class="sheet" id="typeSheet" hidden>
-    <form class="sheet-card" id="typeForm" role="dialog" aria-modal="true" aria-labelledby="typeTitle">
+  <!-- Pengaturan & info -->
+  <div class="sheet" id="settingsSheet" hidden>
+    <div class="sheet-card" role="dialog" aria-modal="true" aria-label="Pengaturan">
       <div class="sheet-head">
-        <h2 id="typeTitle">Ketik kalimat</h2>
+        <h2>Pengaturan</h2>
         <button class="icon-btn small" type="button" data-close aria-label="Tutup">✕</button>
       </div>
-      <p class="sheet-sub" id="typeSub"></p>
-      <textarea id="typeInput" rows="3" maxlength="500" placeholder="Contoh: Saya mau check-in atas nama Reza"></textarea>
-      <div class="sheet-foot">
-        <span class="counter" id="typeCounter">0/500</span>
-        <button class="primary-btn" type="submit">Terjemahkan</button>
-      </div>
-    </form>
+      <label class="field">Bahasa saya
+        <select id="myLang"></select>
+      </label>
+      <div id="extSlot"></div>
+      <button class="link-btn" id="aboutBtn" type="button">ⓘ Cara pakai, privasi & disclaimer</button>
+    </div>
   </div>
 
-  <!-- ===== Layar awal: disclaimer & privasi ===== -->
+  <!-- Layar awal -->
   <div class="sheet intro" id="introSheet" hidden>
     <div class="sheet-card" role="dialog" aria-modal="true" aria-labelledby="introTitle">
-      <h2 id="introTitle">👋 Selamat datang di Bahasa Kita</h2>
-      <p>Bicara dalam Bahasa Indonesia, lawan bicara membaca dan mendengar terjemahannya. Anda melihat <b>terjemahan balik</b> untuk memastikan maksud Anda tersampaikan.</p>
+      <h2 id="introTitle">👋 Bahasa Kita</h2>
       <ol class="steps">
-        <li>Pilih bahasa lawan bicara (dan situasi bila perlu).</li>
-        <li>Tahan tombol 🎤, bicara, lalu lepas.</li>
-        <li>Tunjukkan layar bagian atas ke lawan bicara.</li>
-        <li>Tekan <b>Giliran lawan bicara</b> agar ia bisa menjawab.</li>
+        <li><b>Tahan 🎤</b>, bicara, lepas.</li>
+        <li>Tunjukkan <b>layar atas</b> ke lawan bicara.</li>
+        <li>Cek kotak <b>“Artinya”</b>: sudah sesuai maksud Anda?</li>
+        <li>Lawan bicara menjawab dengan <b>tombol di sisinya</b>.</li>
       </ol>
-      <div class="notice">
-        <p><b>⚠️ Disclaimer:</b> hasil terjemahan bisa keliru. Jangan andalkan aplikasi ini untuk keperluan medis atau hukum yang kritis. Gunakan penerjemah resmi bila tersedia.</p>
-        <p><b>🔒 Privasi:</b> suara Anda diproses oleh layanan pengenalan suara browser (Google untuk Chrome). Teks hasilnya dikirim ke Claude (Anthropic) untuk diterjemahkan. Aplikasi ini tidak menyimpan riwayat percakapan.</p>
-        <p><b>🌐 Butuh internet</b> dan izin mikrofon. Dioptimalkan untuk Chrome di Android.</p>
-      </div>
-      <button class="primary-btn wide" id="introStart" type="button">Saya mengerti, mulai</button>
+      <p class="small">⚠️ Terjemahan bisa keliru. Jangan andalkan untuk urusan medis atau hukum yang kritis.</p>
+      <p class="small">🔒 Suara diproses pengenal suara browser (Google), teks diterjemahkan Claude (Anthropic). Tidak ada riwayat yang disimpan.</p>
+      <button class="primary-btn wide" id="introStart" type="button">Mulai</button>
     </div>
   </div>
 

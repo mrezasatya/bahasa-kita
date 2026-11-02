@@ -11,14 +11,14 @@ const MAX_LISTEN_MS = 30_000;
 const API_TIMEOUT_MS = 12_000;
 
 const ERRORS = {
-  stt_unsupported: "Browser ini tidak mendukung pengenalan suara. Gunakan Chrome di Android, atau ketik dengan tombol ⌨️.",
-  mic_denied: "Izin mikrofon ditolak. Ketuk ikon di samping alamat situs → Izin → Mikrofon → Izinkan, lalu muat ulang halaman.",
+  stt_unsupported: "Browser ini tidak bisa mengenali suara. Pakai Chrome di Android, atau ketik lewat tombol 💬.",
+  mic_denied: "Izin mikrofon ditolak. Ketuk ikon di samping alamat situs → Izin → Mikrofon → Izinkan, lalu muat ulang.",
   no_mic: "Mikrofon tidak ditemukan atau sedang dipakai aplikasi lain.",
-  no_speech: "Tidak ada suara terdeteksi. Dekatkan HP ke mulut, lalu coba lagi.",
-  lang_unsupported: "Pengenalan suara untuk bahasa ini tidak tersedia di HP ini. Gunakan tombol ⌨️ untuk mengetik.",
-  network: "Koneksi internet terputus. Periksa data seluler/Wi-Fi, lalu coba lagi.",
-  timeout: "Koneksi lambat sehingga terjemahan tidak selesai. Coba lagi.",
-  api: "Layanan terjemahan gagal. Coba lagi beberapa saat lagi.",
+  no_speech: "Suara tidak terdengar. Dekatkan HP ke mulut, lalu coba lagi.",
+  lang_unsupported: "Pengenalan suara untuk bahasa ini tidak ada di HP ini. Ketik lewat tombol 💬.",
+  network: "Internet terputus. Periksa data seluler/Wi-Fi, lalu coba lagi.",
+  timeout: "Koneksi lambat, terjemahan tidak selesai. Coba lagi.",
+  api: "Terjemahan gagal. Coba lagi sebentar lagi.",
 };
 
 class AppError extends Error {
@@ -40,7 +40,6 @@ const state = {
   myLang: "id",
   partnerLang: "en",
   situation: null,
-  turn: "me",
   busy: false,
   listening: null,
   lastSpoken: null, // {text, lang}
@@ -60,6 +59,7 @@ async function loadData() {
 
 const lang = (code) => state.langMap.get(code);
 const ui = (code) => lang(code)?.ui || lang("en").ui;
+const shortName = (code) => (code === "id" ? "Indonesia" : lang(code).name);
 
 // ---------------------------------------------------------------- terjemahan
 async function translate(req) {
@@ -99,7 +99,6 @@ function refreshVoices() {
   if (!synth) return;
   state.voices = synth.getVoices();
   renderLanguageOptions();
-  updateVoiceWarning();
 }
 
 const normTag = (s) => String(s || "").replace("_", "-").toLowerCase();
@@ -181,7 +180,6 @@ function startRecognition(sttTag, { keepAlive, onText }) {
     if (finished) return;
     finished = true;
     const text = ctl.text();
-    // Tanpa teks: pakai error fatal bila ada, selain itu anggap tidak ada suara.
     resolveDone({ text, error: text ? null : fatal || "no_speech" });
   }
 
@@ -223,49 +221,46 @@ function startRecognition(sttTag, { keepAlive, onText }) {
 }
 
 // ---------------------------------------------------------------- render
-function setTurn(turn) {
-  state.turn = turn;
-  $("app").dataset.turn = turn;
-  $("turnBtn").textContent = turn === "partner" ? "↩️ Giliran saya" : "🔄 Giliran lawan bicara";
-  if (!state.busy && !state.listening) {
-    $("partnerStatus").textContent = turn === "partner" ? "👇 " + ui(state.partnerLang).speak : "";
-    $("meStatus").textContent = turn === "partner" ? "Lawan bicara menjawab…" : "Siap";
-  }
+function renderMicLabels() {
+  const l = state.listening;
+  $("meMicLabel").textContent = state.busy
+    ? "Menerjemahkan…"
+    : l?.speaker === "me" ? "Mendengarkan…" : "Tahan untuk bicara";
+  $("partnerMicLabel").textContent = state.busy
+    ? ui(state.partnerLang).processing
+    : l?.speaker === "partner" ? ui(state.partnerLang).listening : ui(state.partnerLang).speak;
+  $("meMic").classList.toggle("busy", state.busy);
+  $("partnerMic").classList.toggle("busy", state.busy);
+  $("meMic").classList.toggle("listening", l?.speaker === "me");
+  $("partnerMic").classList.toggle("listening", l?.speaker === "partner");
 }
 
-function setBusy(busy, speaker) {
+function setBusy(busy) {
   state.busy = busy;
-  for (const id of ["meMic", "partnerMic"]) $(id).classList.toggle("busy", busy);
-  $("partnerStatus").textContent = busy ? ui(state.partnerLang).processing : "";
-  $("meStatus").textContent = busy ? "Menerjemahkan…" : "Siap";
-  if (!busy) setTurn(state.turn);
-  void speaker;
+  renderMicLabels();
 }
 
 function clearMessages() {
   for (const id of ["meBig", "meSmall", "partnerBig", "partnerSmall"]) $(id).textContent = "";
   $("meHint").hidden = true;
   $("meCheck").hidden = true;
-  $("partnerCheck").hidden = true;
-  $("meError").hidden = true;
-  $("meWarn").hidden = true;
-  $("partnerWarn").hidden = true;
+  $("meNote").hidden = true;
 }
 
-function showError(err, speaker = "me") {
+function showNote(text, { error = false } = {}) {
+  $("meNote").textContent = text;
+  $("meNote").classList.toggle("error", error);
+  $("meNote").hidden = false;
+}
+
+function showError(err) {
   const msg = err instanceof AppError ? err.message : ERRORS[err] || String(err?.message || err);
-  $("meError").textContent = "⚠️ " + msg;
-  $("meError").hidden = false;
-  if (speaker === "partner") $("partnerStatus").textContent = "⚠️";
+  showNote("⚠️ " + msg, { error: true });
 }
 
 function showInterim(speaker, text) {
-  if (speaker === "me") {
-    $("meHint").hidden = true;
-    $("meSmall").textContent = "🗣 " + text;
-  } else {
-    $("partnerSmall").textContent = "🗣 " + text;
-  }
+  $("meHint").hidden = true;
+  $(speaker === "me" ? "meSmall" : "partnerSmall").textContent = text;
 }
 
 function setBig(el, text) {
@@ -273,40 +268,20 @@ function setBig(el, text) {
   el.classList.toggle("long", text.length > 90);
 }
 
-function renderResult({ speaker, text, from, to, result }) {
+function renderResult({ speaker, text, result }) {
   clearMessages();
   if (speaker === "me") {
-    $("partnerHeading").textContent = ui(to).heading;
+    // Atas: terjemahan besar untuk lawan bicara. Bawah: ucapan saya + artinya.
     setBig($("partnerBig"), result.translation);
-    $("meSmall").textContent = `🗣 Anda (${lang(from).name}): ${text}`;
+    $("meSmall").textContent = "🗣 " + text;
     $("meCheckText").textContent = result.back_translation;
-    $("meCheck").querySelector(".check-label").textContent =
-      `✅ Terjemahan balik ke ${lang(from).name} — apakah maksud Anda sudah benar?`;
     $("meCheck").hidden = false;
   } else {
-    $("partnerHeading").textContent = "🗣";
-    $("partnerSmall").textContent = text;
-    $("partnerCheck").textContent = `${ui(from).check}: ${result.back_translation}`;
-    $("partnerCheck").hidden = false;
+    // Bawah: terjemahan besar untuk saya. Atas: ucapan lawan bicara + artinya (bahasanya sendiri).
     setBig($("meBig"), result.translation);
-    $("meSmall").textContent = `Lawan bicara (${lang(from).name}): ${text}`;
+    $("partnerSmall").textContent = `${text}\n✓ ${result.back_translation}`;
   }
-  $("meReplay").disabled = false;
-  $("partnerReplay").disabled = false;
-}
-
-function showVoiceWarning(code) {
-  const msg = `🔇 Suara ${lang(code).name} tidak tersedia di HP ini. Tunjukkan teks di layar kepada lawan bicara.`;
-  $("meWarn").textContent = msg;
-  $("meWarn").hidden = false;
-}
-
-function updateVoiceWarning() {
-  if (state.busy || state.listening) return;
-  if (voiceStatus(state.partnerLang) === "none" && !$("meHint").hidden) {
-    $("meWarn").textContent = `ℹ️ ${lang(state.partnerLang).name}: mode teks saja (suara tidak tersedia di HP ini).`;
-    $("meWarn").hidden = false;
-  }
+  $("replayBtn").disabled = false;
 }
 
 // ---------------------------------------------------------------- alur utama
@@ -314,31 +289,28 @@ async function runTranslation(text, speaker, { from, to, origin = "speech", rele
   from = from || (speaker === "me" ? state.myLang : state.partnerLang);
   to = to || (speaker === "me" ? state.partnerLang : state.myLang);
   if (from === to) {
-    showError(new AppError("api", "Bahasa asal dan tujuan sama. Pilih bahasa lawan bicara yang berbeda."));
+    showError(new AppError("api", "Bahasa Anda dan lawan bicara sama. Pilih bahasa lain."));
     return;
   }
-  setBusy(true, speaker);
-  $("meError").hidden = true;
+  setBusy(true);
+  clearMessages();
   showInterim(speaker, text);
   const t0 = performance.now();
   let result;
   try {
     result = await translate({ text, source_lang: from, target_lang: to, situation: state.situation });
   } catch (err) {
-    setBusy(false, speaker);
-    clearMessages();
-    showInterim(speaker, text); // tetap tampilkan kalimat yang gagal diterjemahkan
-    showError(err instanceof AppError ? err : new AppError("api"), speaker);
+    setBusy(false);
+    showError(err instanceof AppError ? err : new AppError("api"));
     return;
   }
   const t1 = performance.now();
-  setBusy(false, speaker);
-  renderResult({ speaker, text, from, to, result });
+  setBusy(false);
+  renderResult({ speaker, text, result });
   state.lastSpoken = { text: result.translation, lang: to };
-  if (speaker === "partner") setTurn("me");
 
   const tts = await speak(result.translation, to);
-  if (!tts.ok) showVoiceWarning(to);
+  if (!tts.ok) showNote(`🔇 Suara ${shortName(to)} tidak tersedia di HP ini. Tunjukkan teksnya.`);
   const m = {
     when: new Date().toISOString(),
     origin,
@@ -358,17 +330,11 @@ async function beginListening(speaker) {
   if (state.busy || state.listening) return;
   if (!SR) { showError(new AppError("stt_unsupported")); return; }
   synth?.cancel();
-  setTurn(speaker);
   const code = speaker === "me" ? state.myLang : state.partnerLang;
-  const btn = $(speaker === "me" ? "meMic" : "partnerMic");
   const session = { speaker, holding: true, downAt: Date.now() };
   state.listening = session;
-
   clearMessages();
-  btn.classList.add("listening");
-  $(speaker === "me" ? "meMicLabel" : "partnerMicLabel").textContent = ui(code).listening;
-  if (speaker === "me") $("meStatus").textContent = "🎙 Mendengarkan…";
-  else $("partnerStatus").textContent = "🎙 " + ui(code).listening;
+  renderMicLabels();
 
   const ctl = startRecognition(lang(code).stt, {
     keepAlive: () => session.holding,
@@ -377,22 +343,19 @@ async function beginListening(speaker) {
   session.ctl = ctl;
 
   const watchdog = setInterval(() => {
-    const elapsed = Date.now() - session.downAt;
-    if (elapsed > MAX_LISTEN_MS) ctl.stop();
+    if (Date.now() - session.downAt > MAX_LISTEN_MS) ctl.stop();
     else if (!session.holding && ctl.text() && Date.now() - ctl.lastResultAt > SILENCE_STOP_MS) ctl.stop();
   }, 250);
 
   const { text, error } = await ctl.done;
   const releasedAt = performance.now();
   clearInterval(watchdog);
-  btn.classList.remove("listening");
   state.listening = null;
   renderMicLabels();
-  setTurn(state.turn);
 
   if (!text) {
     clearMessages();
-    showError(new AppError(error || "no_speech"), speaker);
+    showError(new AppError(error || "no_speech"));
     return;
   }
   await runTranslation(text, speaker, { releasedAt });
@@ -431,28 +394,19 @@ function bindMic(btn, speaker) {
 
 // ---------------------------------------------------------------- kontrol
 function renderLanguageOptions() {
-  const fill = (sel, value) => {
+  const fill = (sel, value, exclude) => {
     sel.innerHTML = "";
     for (const l of state.languages) {
+      if (l.code === exclude) continue;
       const opt = document.createElement("option");
       opt.value = l.code;
-      const textOnly = voiceStatus(l.code) === "none" ? " · teks saja" : "";
-      opt.textContent = (l.code === "id" ? "Indonesia" : l.name) + textOnly;
+      opt.textContent = shortName(l.code) + (voiceStatus(l.code) === "none" ? " (teks saja)" : "");
       sel.appendChild(opt);
     }
     sel.value = value;
   };
-  fill($("myLang"), state.myLang);
-  fill($("partnerLang"), state.partnerLang);
-}
-
-function renderMicLabels() {
-  $("meMicLabel").textContent = ui(state.myLang).speak;
-  $("partnerMicLabel").textContent = ui(state.partnerLang).speak;
-  $("myLangBadge").textContent = lang(state.myLang).native;
-  $("partnerLangBadge").textContent = lang(state.partnerLang).native;
-  $("partnerHeading").textContent = ui(state.partnerLang).heading;
-  $("partnerPanel").setAttribute("lang", state.partnerLang);
+  fill($("partnerLang"), state.partnerLang, state.myLang);
+  fill($("myLang"), state.myLang, null);
 }
 
 function setLanguages(myLang, partnerLang) {
@@ -460,12 +414,10 @@ function setLanguages(myLang, partnerLang) {
   state.partnerLang = partnerLang;
   store.set("bk_my", myLang);
   store.set("bk_partner", partnerLang);
-  $("myLang").value = myLang;
-  $("partnerLang").value = partnerLang;
+  renderLanguageOptions();
+  $("myLangLabel").textContent = shortName(myLang);
+  $("partnerPanel").setAttribute("lang", partnerLang);
   renderMicLabels();
-  setTurn(state.turn);
-  $("meWarn").hidden = true;
-  updateVoiceWarning();
 }
 
 function renderSituations() {
@@ -483,61 +435,41 @@ function renderSituations() {
       state.situation = s.id;
       store.set("bk_situation", s.id || "");
       renderSituations();
+      renderPhrases();
     });
     row.appendChild(b);
   }
 }
 
-function openSheet(id) { $(id).hidden = false; }
-function closeSheet(id) { $(id).hidden = true; }
-
-function openPhrases() {
+function renderPhrases() {
   const list = $("phraseList");
   list.innerHTML = "";
-  const groups = state.situation
-    ? state.situations.filter((s) => s.id === state.situation)
-    : state.situations;
-  const target = state.partnerLang !== "id" ? state.partnerLang : state.myLang;
-  $("phrasesSub").textContent = state.situation
-    ? `Ketuk frasa untuk menerjemahkan ke ${lang(target).name}.`
-    : `Pilih situasi agar frasa lebih relevan. Ketuk frasa untuk menerjemahkan ke ${lang(target).name}.`;
-  for (const g of groups) {
-    if (groups.length > 1) {
-      const h = document.createElement("li");
-      h.className = "phrase-group";
-      h.textContent = `${g.icon} ${g.name}`;
-      list.appendChild(h);
-    }
-    for (const p of g.phrases) {
-      const li = document.createElement("li");
-      const b = document.createElement("button");
-      b.type = "button";
-      b.textContent = p;
-      b.addEventListener("click", () => {
-        closeSheet("phrasesSheet");
-        if (state.busy || state.listening) return;
-        const prev = state.situation;
-        state.situation = g.id; // frasa membawa konteks situasinya sendiri
-        runTranslation(p, "me", { from: "id", to: target, origin: "phrase" }).finally(() => {
-          state.situation = prev;
-        });
-      });
-      li.appendChild(b);
-      list.appendChild(li);
-    }
+  const sit = state.situations.find((s) => s.id === state.situation);
+  if (!sit) {
+    const li = document.createElement("li");
+    li.className = "small";
+    li.textContent = "Pilih situasi di atas untuk melihat frasa siap pakai.";
+    list.appendChild(li);
+    return;
   }
-  openSheet("phrasesSheet");
+  const target = state.partnerLang !== "id" ? state.partnerLang : state.myLang;
+  for (const p of sit.phrases) {
+    const li = document.createElement("li");
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = p;
+    b.addEventListener("click", () => {
+      closeSheet("phrasesSheet");
+      if (state.busy || state.listening) return;
+      runTranslation(p, "me", { from: "id", to: target, origin: "phrase" });
+    });
+    li.appendChild(b);
+    list.appendChild(li);
+  }
 }
 
-function openType() {
-  const speaker = state.turn;
-  const from = speaker === "me" ? state.myLang : state.partnerLang;
-  const to = speaker === "me" ? state.partnerLang : state.myLang;
-  $("typeSub").textContent = `${lang(from).name} → ${lang(to).name}`;
-  $("typeForm").dataset.speaker = speaker;
-  openSheet("typeSheet");
-  setTimeout(() => $("typeInput").focus(), 50);
-}
+function openSheet(id) { $(id).hidden = false; }
+function closeSheet(id) { $(id).hidden = true; }
 
 function warmUpSpeech() {
   // Gestur pertama pengguna "membuka" SpeechSynthesis di beberapa versi Android.
@@ -550,34 +482,26 @@ function warmUpSpeech() {
 }
 
 function bindControls() {
+  $("partnerLang").addEventListener("change", (e) => setLanguages(state.myLang, e.target.value));
   $("myLang").addEventListener("change", (e) => {
     const v = e.target.value;
     setLanguages(v, v === state.partnerLang ? state.myLang : state.partnerLang);
   });
-  $("partnerLang").addEventListener("change", (e) => {
-    const v = e.target.value;
-    setLanguages(v === state.myLang ? state.partnerLang : state.myLang, v);
+  $("settingsBtn").addEventListener("click", () => openSheet("settingsSheet"));
+  $("aboutBtn").addEventListener("click", () => { closeSheet("settingsSheet"); openSheet("introSheet"); });
+  $("phrasesBtn").addEventListener("click", () => { renderPhrases(); openSheet("phrasesSheet"); });
+  $("replayBtn").addEventListener("click", () => {
+    const l = state.lastSpoken;
+    if (l) speak(l.text, l.lang).then((r) => { if (!r.ok) showNote(`🔇 Suara ${shortName(l.lang)} tidak tersedia di HP ini. Tunjukkan teksnya.`); });
   });
-  $("swapBtn").addEventListener("click", () => setLanguages(state.partnerLang, state.myLang));
-  $("turnBtn").addEventListener("click", () => setTurn(state.turn === "me" ? "partner" : "me"));
-  $("phrasesBtn").addEventListener("click", openPhrases);
-  $("typeBtn").addEventListener("click", openType);
-  $("infoBtn").addEventListener("click", () => openSheet("introSheet"));
-  const replay = () => {
-    if (state.lastSpoken) speak(state.lastSpoken.text, state.lastSpoken.lang).then((r) => { if (!r.ok) showVoiceWarning(state.lastSpoken.lang); });
-  };
-  $("meReplay").addEventListener("click", replay);
-  $("partnerReplay").addEventListener("click", replay);
 
-  $("typeInput").addEventListener("input", (e) => { $("typeCounter").textContent = `${e.target.value.length}/500`; });
   $("typeForm").addEventListener("submit", (e) => {
     e.preventDefault();
     const text = $("typeInput").value.trim();
     if (!text || state.busy) return;
-    closeSheet("typeSheet");
+    closeSheet("phrasesSheet");
     $("typeInput").value = "";
-    $("typeCounter").textContent = "0/500";
-    runTranslation(text, e.target.dataset.speaker || "me", { origin: "typed" });
+    runTranslation(text, "me", { origin: "typed" });
   });
 
   for (const sheet of document.querySelectorAll(".sheet")) {
@@ -618,7 +542,6 @@ async function init() {
   const savedSit = store.get("bk_situation");
   if (savedSit && state.situations.some((s) => s.id === savedSit)) state.situation = savedSit;
 
-  renderLanguageOptions();
   renderSituations();
   bindControls();
   setLanguages(state.myLang, state.partnerLang);
@@ -627,10 +550,7 @@ async function init() {
     refreshVoices();
     synth.addEventListener?.("voiceschanged", refreshVoices);
   }
-  if (!SR) {
-    $("meWarn").textContent = "ℹ️ Pengenalan suara tidak didukung di browser ini. Gunakan Chrome di Android, atau tombol ⌨️ untuk mengetik.";
-    $("meWarn").hidden = false;
-  }
+  if (!SR) showNote("ℹ️ Browser ini tidak bisa mengenali suara. Pakai Chrome di Android, atau ketik lewat tombol 💬.");
   if (store.get("bk_intro_ok") !== "1") openSheet("introSheet");
 
   window.BK = { state, runTranslation, setLanguages };
@@ -641,6 +561,6 @@ init().catch((err) => {
   console.error(err);
   document.body.insertAdjacentHTML(
     "afterbegin",
-    '<p class="error" style="margin:16px">Gagal memuat aplikasi. Periksa koneksi lalu muat ulang halaman.</p>'
+    '<p class="note error" style="margin:16px">Gagal memuat aplikasi. Periksa koneksi lalu muat ulang halaman.</p>'
   );
 });

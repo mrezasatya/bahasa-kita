@@ -49,7 +49,15 @@ docs/              hasil uji Fase 0, deploy, QA, protokol uji pengguna
 - `ANTHROPIC_API_KEY=... npm run dev`: server lokal dengan Claude sungguhan.
 - `npm run build:prototype`: membangun ulang `prototype/prototype.html`. **Wajib dijalankan setelah mengubah `public/`, `lib/prompt.js`, atau `prototype/*`.**
 - `ANTHROPIC_API_KEY=... npm run eval -- --target ja`: eval Fase 2 → `docs/hasil-eval/`.
-- E2E: `BK_MOCK=1 PORT=3123 node scripts/dev-server.mjs &` lalu `NODE_PATH=$(npm root -g) node tests/e2e-smoke.mjs`.
+- E2E aplikasi: `BK_MOCK=1 PORT=3123 node scripts/dev-server.mjs &` lalu `NODE_PATH=$(npm root -g) node tests/e2e-smoke.mjs`.
+- E2E prototype: `NODE_PATH=$(npm root -g) node tests/e2e-smoke.mjs --prototype` (MyMemory ditiru).
+
+## Prinsip UI (revisi 1, masukan pemilik: "terlalu banyak tombol dan tulisan")
+- Layar utama hanya: panel lawan bicara (teks besar + 1 tombol), bilah bahasa (Indonesia → [bahasa lawan] + ⚙️), panel saya (teks + kotak "Artinya" + 🔊 🎤 💬).
+- Fitur sekunder masuk sheet: 💬 = situasi + frasa cepat + ketik; ⚙️ = bahasa saya + mesin prototype + info.
+- "Giliran lawan bicara" = tombol 🎤 di panel atas (tidak ada tombol giliran terpisah). Tombol tukar bahasa dihapus.
+- Jangan menambah elemen ke layar utama tanpa alasan kuat.
+- Prototype tidak boleh "menerjemahkan" dengan menggemakan teks asli. Mode gratis memakai MyMemory, mode Claude memakai API key.
 
 ## Konvensi
 - Bahasa UI dan pesan error: Bahasa Indonesia yang sederhana (literasi digital pengguna beragam).

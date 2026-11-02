@@ -3,14 +3,14 @@
 Uji di HP Android + Chrome (catat model HP dan versi Android). Centang bila lulus.
 
 ## Alur inti
-- [ ] Layar awal (disclaimer & privasi) muncul pada kunjungan pertama, tombol ⓘ membukanya lagi
+- [ ] Layar awal (disclaimer & privasi) muncul pada kunjungan pertama, dan bisa dibuka lagi lewat ⚙️ → "Cara pakai, privasi & disclaimer"
 - [ ] Izin mikrofon diminta, dan setelah diizinkan alur berjalan
 - [ ] Tahan-bicara-lepas: transkrip → terjemahan teks besar (atas, diputar 180°) → suara → terjemahan balik (bawah)
 - [ ] Ketuk sekali: mendengar sampai jeda sekitar 2 detik lalu berhenti otomatis. Ketuk lagi untuk berhenti manual
 - [ ] Tombol 🔊 memutar ulang suara terjemahan
-- [ ] Tombol ⇄ menukar bahasa, dan pilihan tersimpan setelah halaman dimuat ulang
-- [ ] "Giliran lawan bicara" → lawan bicara menekan tombol atas → terjemahan ke Bahasa Indonesia tampil besar di bawah dan diucapkan
-- [ ] Mode ketik (⌨️) berjalan untuk kedua arah
+- [ ] Pilihan bahasa (bilah tengah & ⚙️) tersimpan setelah halaman dimuat ulang
+- [ ] Lawan bicara menekan tombol 🎤 di panel atas → terjemahan ke Bahasa Indonesia tampil besar di bawah dan diucapkan
+- [ ] Kolom ketik di sheet 💬 berjalan
 
 ## Situasi & frasa cepat (semua 6 situasi)
 - [ ] Bandara & Imigrasi  - [ ] Hotel  - [ ] Restoran  - [ ] Transportasi  - [ ] Belanja  - [ ] Darurat & Kesehatan
@@ -28,7 +28,7 @@ Uji di HP Android + Chrome (catat model HP dan versi Android). Centang bila lulu
 - [ ] Koneksi lambat (DevTools: *Slow 3G*) → hasil tetap muncul, atau pesan "koneksi lambat" setelah ±12 detik
 - [ ] API gagal (mis. key salah di Preview) → pesan "Layanan terjemahan gagal"
 - [ ] Bahasa tanpa voice → label "teks saja" + peringatan 🔇
-- [ ] Kalimat > 500 karakter (mode ketik) → dibatasi
+- [ ] Kalimat > 500 karakter (kolom ketik) → dibatasi
 
 ## Lingkungan nyata
 - [ ] Ruangan bising (kafe, jalan raya): akurasi STT dicatat

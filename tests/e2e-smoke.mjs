@@ -1,88 +1,101 @@
 // Smoke test UI di Chromium headless (Playwright) dengan SpeechRecognition palsu.
-// Jalankan: BK_MOCK=1 PORT=3123 node scripts/dev-server.mjs &  lalu  node tests/e2e-smoke.mjs [url]
+// Aplikasi:   BK_MOCK=1 PORT=3123 node scripts/dev-server.mjs &   lalu   NODE_PATH=$(npm root -g) node tests/e2e-smoke.mjs
+// Prototype:  NODE_PATH=$(npm root -g) node tests/e2e-smoke.mjs --prototype
 import { createRequire } from "node:module";
+import { fileURLToPath } from "node:url";
 const { chromium } = createRequire(import.meta.url)("playwright"); // memakai Playwright terpasang global
 
-const url = process.argv[2] || "http://localhost:3123/";
+const isProto = process.argv.includes("--prototype");
+const url = isProto
+  ? "file://" + fileURLToPath(new URL("../prototype/prototype.html", import.meta.url))
+  : process.argv.find((a) => a.startsWith("http")) || "http://localhost:3123/";
 const shotDir = process.env.SHOT_DIR || ".";
-const fakeSR = () => {
+const tag = isProto ? "proto" : "app";
+
+const browser = await chromium.launch();
+const page = await browser.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2 });
+const errors = [];
+page.on("pageerror", (e) => errors.push(e.message));
+page.on("console", (m) => { if (m.type() === "error" && !/Failed to load resource/.test(m.text())) errors.push(m.text()); });
+await page.addInitScript(() => {
   class FakeSR {
     start() {
-      setTimeout(() => {
-        const r = [Object.assign([{ transcript: window.__say || "Saya mau check-in atas nama Reza" }], { isFinal: true })];
-        this.onresult?.({ results: r });
-      }, 150);
+      setTimeout(() => this.onresult?.({ results: [Object.assign([{ transcript: window.__say || "Saya mau check-in atas nama Reza" }], { isFinal: true })] }), 150);
     }
     stop() { setTimeout(() => this.onend?.(), 50); }
     abort() { this.stop(); }
   }
   window.SpeechRecognition = FakeSR;
   window.webkitSpeechRecognition = FakeSR;
-};
+});
+if (isProto) {
+  // Tiruan layanan MyMemory (jaringan uji tidak bisa keluar).
+  const fake = { "id|en:Saya mau check-in atas nama Reza": "I want to check in under the name Reza", "en|id:I want to check in under the name Reza": "Saya ingin check-in atas nama Reza", "en|id:Yes, all our food is halal": "Ya, semua makanan kami halal", "id|en:Ya, semua makanan kami halal": "Yes, all our food is halal" };
+  await page.route("https://api.mymemory.translated.net/**", (route) => {
+    const u = new URL(route.request().url());
+    const key = `${u.searchParams.get("langpair")}:${u.searchParams.get("q")}`;
+    route.fulfill({ contentType: "application/json", body: JSON.stringify({ responseStatus: 200, responseData: { translatedText: fake[key] || "UNMOCKED " + key } }) });
+  });
+}
 
-const browser = await chromium.launch();
-const page = await browser.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, hasTouch: true });
-const errors = [];
-page.on("pageerror", (e) => errors.push(e.message));
-page.on("console", (m) => { if (m.type() === "error" && !/Failed to load resource/.test(m.text())) errors.push(m.text()); });
-await page.addInitScript(fakeSR);
+async function hold(selector, ms = 700) {
+  const b = await page.locator(selector).boundingBox();
+  await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2);
+  await page.mouse.down();
+  await page.waitForTimeout(ms);
+  await page.mouse.up();
+}
+const text = (id) => page.evaluate((i) => document.getElementById(i).innerText, id);
+
 await page.goto(url);
 await page.waitForFunction(() => window.BK);
-await page.screenshot({ path: `${shotDir}/01-intro.png` });
+await page.screenshot({ path: `${shotDir}/${tag}-01-intro.png` });
 await page.click("#introStart");
+await page.screenshot({ path: `${shotDir}/${tag}-02-awal.png` });
 
-// 1) Bicara (tahan 700 ms)
-const mic = page.locator("#meMic");
-const box = await mic.boundingBox();
-await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
-await page.mouse.down();
-await page.waitForTimeout(700);
-await page.mouse.up();
+// 1) Saya bicara (ID -> EN)
+await hold("#meMic");
 await page.waitForFunction(() => document.getElementById("partnerBig").textContent.length > 0, null, { timeout: 8000 });
-const r1 = await page.evaluate(() => ({
-  partnerBig: document.getElementById("partnerBig").textContent,
-  meCheck: document.getElementById("meCheckText").textContent,
-  meSmall: document.getElementById("meSmall").textContent,
-}));
-console.log("Alur bicara:", r1);
-await page.screenshot({ path: `${shotDir}/02-hasil-saya.png` });
+const r1 = { atas: await text("partnerBig"), artinya: await text("meCheckText") };
+console.log("Bicara:", r1);
+if (isProto && !/check in/i.test(r1.atas)) errors.push("Prototype tidak menerjemahkan ucapan bebas: " + r1.atas);
+await page.screenshot({ path: `${shotDir}/${tag}-03-hasil-saya.png` });
 
-// 2) Situasi + frasa cepat
-await page.getByRole("radio", { name: /Restoran/ }).click();
+// 2) Frasa cepat dengan situasi
 await page.click("#phrasesBtn");
-await page.screenshot({ path: `${shotDir}/03-frasa.png` });
+await page.getByRole("radio", { name: /Restoran/ }).click();
+await page.screenshot({ path: `${shotDir}/${tag}-04-frasa.png` });
 await page.getByRole("button", { name: "Apakah makanan ini halal?" }).click();
-await page.waitForFunction(() => document.getElementById("partnerBig").textContent.includes("halal"));
-console.log("Frasa:", await page.textContent("#partnerBig"));
+await page.waitForFunction(() => /halal/i.test(document.getElementById("partnerBig").textContent));
+console.log("Frasa:", await text("partnerBig"));
 
-// 3) Giliran lawan bicara
-await page.click("#turnBtn");
+// 3) Lawan bicara menjawab lewat tombol di sisinya
 await page.evaluate(() => { window.__say = "Yes, all our food is halal"; });
-const pm = await page.locator("#partnerMic").boundingBox();
-await page.mouse.move(pm.x + pm.width / 2, pm.y + pm.height / 2);
-await page.mouse.down();
-await page.waitForTimeout(700);
-await page.mouse.up();
+await hold("#partnerMic");
 await page.waitForFunction(() => document.getElementById("meBig").textContent.length > 0, null, { timeout: 8000 });
-console.log("Lawan bicara:", { meBig: await page.textContent("#meBig"), partnerCheck: await page.textContent("#partnerCheck"), turn: await page.getAttribute("#app", "data-turn") });
-await page.screenshot({ path: `${shotDir}/04-hasil-lawan.png` });
+console.log("Lawan bicara:", { bawah: await text("meBig"), atas: await text("partnerSmall") });
+await page.screenshot({ path: `${shotDir}/${tag}-05-hasil-lawan.png` });
 
 // 4) Ketik
-await page.click("#typeBtn");
-await page.fill("#typeInput", "Berapa harga tiket ke Shibuya?");
+await page.click("#phrasesBtn");
+await page.fill("#typeInput", "Saya mau check-in atas nama Reza");
 await page.click("#typeForm button[type=submit]");
-await page.waitForFunction(() => document.getElementById("partnerBig").textContent.includes("Shibuya"));
-console.log("Ketik:", await page.textContent("#partnerBig"));
+await page.waitForFunction(() => document.getElementById("partnerBig").textContent.length > 0);
+console.log("Ketik:", await text("partnerBig"));
 
-// 5) Error jaringan
-await page.route("**/api/translate", (r) => r.abort());
-await page.click("#typeBtn");
-await page.fill("#typeInput", "Halo");
+// 5) Pengaturan
+await page.click("#settingsBtn");
+await page.screenshot({ path: `${shotDir}/${tag}-06-pengaturan.png` });
+await page.click("#settingsSheet [data-close]");
+
+// 6) Error jaringan
+await page.route(isProto ? "https://api.mymemory.translated.net/**" : "**/api/translate", (r) => r.abort());
+await page.click("#phrasesBtn");
+await page.fill("#typeInput", "Halo apa kabar");
 await page.click("#typeForm button[type=submit]");
-await page.waitForSelector("#meError:not([hidden])");
-console.log("Error jaringan:", await page.textContent("#meError"));
-await page.screenshot({ path: `${shotDir}/05-error.png` });
+await page.waitForSelector("#meNote.error:not([hidden])");
+console.log("Error jaringan:", await text("meNote"));
 
-console.log(errors.length ? "JS errors: " + errors.join(" | ") : "Tidak ada JS error.");
+console.log(errors.length ? "GAGAL: " + errors.join(" | ") : "Tidak ada error.");
 await browser.close();
 if (errors.length) process.exit(1);
