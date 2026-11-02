@@ -1,0 +1,60 @@
+{
+  "_catatan": "Status 'kandidat' = belum diverifikasi di HP Android uji (Fase 0). Ubah ke 'final' atau 'teks_saja' setelah uji spike.html. Hapus entri yang gagal STT.",
+  "languages": [
+    {
+      "code": "id", "name": "Bahasa Indonesia", "native": "Bahasa Indonesia",
+      "stt": "id-ID", "tts": "id-ID", "dir": "ltr", "status": "kandidat",
+      "ui": { "speak": "Tahan untuk bicara", "listening": "Mendengarkan…", "processing": "Menerjemahkan…", "heading": "Pesan untuk Anda", "check": "Terjemahan balik (cek makna)" }
+    },
+    {
+      "code": "en", "name": "Inggris", "native": "English",
+      "stt": "en-US", "tts": "en-US", "dir": "ltr", "status": "kandidat",
+      "ui": { "speak": "Hold to speak", "listening": "Listening…", "processing": "Translating…", "heading": "Message for you", "check": "Back-translation (check meaning)" }
+    },
+    {
+      "code": "ar", "name": "Arab", "native": "العربية",
+      "stt": "ar-SA", "tts": "ar-SA", "dir": "rtl", "status": "kandidat",
+      "ui": { "speak": "اضغط مع الاستمرار للتحدث", "listening": "جارٍ الاستماع…", "processing": "جارٍ الترجمة…", "heading": "رسالة لك", "check": "الترجمة العكسية (للتحقق من المعنى)" }
+    },
+    {
+      "code": "ja", "name": "Jepang", "native": "日本語",
+      "stt": "ja-JP", "tts": "ja-JP", "dir": "ltr", "status": "kandidat",
+      "ui": { "speak": "押したまま話してください", "listening": "聞いています…", "processing": "翻訳中…", "heading": "あなたへのメッセージ", "check": "逆翻訳（意味の確認）" }
+    },
+    {
+      "code": "ko", "name": "Korea", "native": "한국어",
+      "stt": "ko-KR", "tts": "ko-KR", "dir": "ltr", "status": "kandidat",
+      "ui": { "speak": "누른 채로 말하세요", "listening": "듣는 중…", "processing": "번역 중…", "heading": "당신을 위한 메시지", "check": "역번역 (의미 확인)" }
+    },
+    {
+      "code": "zh", "name": "Mandarin", "native": "中文（简体）",
+      "stt": "zh-CN", "tts": "zh-CN", "dir": "ltr", "status": "kandidat",
+      "ui": { "speak": "按住说话", "listening": "正在听…", "processing": "正在翻译…", "heading": "给您的信息", "check": "回译（核对意思）" }
+    },
+    {
+      "code": "th", "name": "Thai", "native": "ไทย",
+      "stt": "th-TH", "tts": "th-TH", "dir": "ltr", "status": "kandidat",
+      "ui": { "speak": "กดค้างไว้เพื่อพูด", "listening": "กำลังฟัง…", "processing": "กำลังแปล…", "heading": "ข้อความถึงคุณ", "check": "แปลย้อนกลับ (ตรวจความหมาย)" }
+    },
+    {
+      "code": "fr", "name": "Prancis", "native": "Français",
+      "stt": "fr-FR", "tts": "fr-FR", "dir": "ltr", "status": "kandidat",
+      "ui": { "speak": "Maintenez pour parler", "listening": "Écoute…", "processing": "Traduction…", "heading": "Message pour vous", "check": "Retraduction (vérifier le sens)" }
+    },
+    {
+      "code": "es", "name": "Spanyol", "native": "Español",
+      "stt": "es-ES", "tts": "es-ES", "dir": "ltr", "status": "kandidat",
+      "ui": { "speak": "Mantén pulsado para hablar", "listening": "Escuchando…", "processing": "Traduciendo…", "heading": "Mensaje para usted", "check": "Retrotraducción (comprobar el sentido)" }
+    },
+    {
+      "code": "de", "name": "Jerman", "native": "Deutsch",
+      "stt": "de-DE", "tts": "de-DE", "dir": "ltr", "status": "kandidat",
+      "ui": { "speak": "Zum Sprechen gedrückt halten", "listening": "Höre zu…", "processing": "Übersetze…", "heading": "Nachricht für Sie", "check": "Rückübersetzung (Sinn prüfen)" }
+    },
+    {
+      "code": "tr", "name": "Turki", "native": "Türkçe",
+      "stt": "tr-TR", "tts": "tr-TR", "dir": "ltr", "status": "kandidat",
+      "ui": { "speak": "Konuşmak için basılı tutun", "listening": "Dinleniyor…", "processing": "Çevriliyor…", "heading": "Size mesaj", "check": "Geri çeviri (anlamı kontrol edin)" }
+    }
+  ]
+}

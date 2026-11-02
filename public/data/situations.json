@@ -1,0 +1,78 @@
+{
+  "situations": [
+    {
+      "id": "bandara", "name": "Bandara & Imigrasi", "icon": "✈️",
+      "context": "At an airport: immigration counter, customs, check-in desk, baggage claim, boarding gates. The other person is usually an officer or airline staff.",
+      "phrases": [
+        "Saya datang untuk berlibur.",
+        "Saya akan tinggal selama tujuh hari.",
+        "Saya menginap di hotel ini.",
+        "Di mana tempat pengambilan bagasi?",
+        "Koper saya hilang.",
+        "Di mana gerbang keberangkatan saya?"
+      ]
+    },
+    {
+      "id": "hotel", "name": "Hotel", "icon": "🏨",
+      "context": "At a hotel: front desk, reservation, check-in/check-out, room problems, hotel facilities. The other person is hotel staff.",
+      "phrases": [
+        "Saya mau check-in. Saya sudah memesan kamar.",
+        "Jam berapa sarapan disediakan?",
+        "Apa kata sandi Wi-Fi-nya?",
+        "AC di kamar saya tidak berfungsi.",
+        "Boleh saya titip koper setelah check-out?",
+        "Jam berapa batas waktu check-out?"
+      ]
+    },
+    {
+      "id": "restoran", "name": "Restoran", "icon": "🍽️",
+      "context": "At a restaurant or food stall: ordering, dietary needs (halal, allergies, no pork/alcohol), spice level, paying the bill. The other person is a waiter or cashier.",
+      "phrases": [
+        "Meja untuk dua orang, ya.",
+        "Apakah makanan ini halal?",
+        "Apakah ini mengandung babi atau alkohol?",
+        "Saya alergi kacang.",
+        "Tolong jangan terlalu pedas.",
+        "Boleh minta tagihannya?",
+        "Bisa bayar pakai kartu?"
+      ]
+    },
+    {
+      "id": "transportasi", "name": "Transportasi", "icon": "🚕",
+      "context": "Getting around: taxi, ride-hailing, train, subway, bus, tickets, directions, fares. The other person is a driver, station staff or a passer-by.",
+      "phrases": [
+        "Tolong antar saya ke alamat ini.",
+        "Berapa ongkosnya ke bandara?",
+        "Di mana stasiun terdekat?",
+        "Kereta ini menuju ke mana?",
+        "Tolong berhenti di sini.",
+        "Di mana saya bisa membeli tiket?"
+      ]
+    },
+    {
+      "id": "belanja", "name": "Belanja", "icon": "🛍️",
+      "context": "Shopping: shops, markets, prices, bargaining, sizes, fitting rooms, receipts, tax refund. The other person is a shop assistant or seller.",
+      "phrases": [
+        "Berapa harganya?",
+        "Boleh kurang sedikit?",
+        "Apakah ada ukuran yang lebih besar?",
+        "Boleh saya coba?",
+        "Saya lihat-lihat dulu, terima kasih.",
+        "Bisa minta struknya?"
+      ]
+    },
+    {
+      "id": "darurat", "name": "Darurat & Kesehatan", "icon": "🚑",
+      "context": "Emergency or health: asking for help, police, hospital, pharmacy, lost passport or belongings, symptoms. Be clear and direct; accuracy matters more than politeness.",
+      "phrases": [
+        "Tolong! Saya butuh bantuan.",
+        "Tolong panggilkan ambulans.",
+        "Di mana rumah sakit terdekat?",
+        "Paspor saya hilang.",
+        "Saya perlu ke kantor polisi.",
+        "Teman saya sakit dan butuh dokter.",
+        "Tolong hubungi Kedutaan Besar Indonesia."
+      ]
+    }
+  ]
+}
