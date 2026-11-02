@@ -1,0 +1,9 @@
+/* ===== Khusus prototype ===== */
+.proto-bar { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.proto-tag { font-size: 0.75rem; font-weight: 800; letter-spacing: 0.06em; color: #7c2d12; background: #fed7aa; padding: 3px 8px; border-radius: 6px; }
+.proto-mode { font-size: 0.8rem; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+.proto-mode select, .proto-key input { min-height: 36px; border-radius: 10px; border: 2px solid var(--line); background: var(--me-bg); padding: 0 8px; font-size: 0.9rem; }
+.proto-key { display: flex; gap: 6px; }
+.proto-key input { flex: 1; min-width: 0; }
+.proto-key button { min-height: 36px; border-radius: 10px; border: none; background: var(--partner-bg); color: #fff; padding: 0 14px; font-weight: 700; }
+.proto-note { margin: 0; font-size: 0.78rem; color: var(--muted); }
