@@ -4,6 +4,10 @@ Penerjemah ucapan untuk turis Indonesia di luar negeri. Bicara dalam Bahasa Indo
 
 **Pembeda:** (a) terjemahan balik untuk verifikasi makna, (b) mode situasi + frasa cepat sekali tap.
 
+## Live
+**https://bahasa-kita-sigma.vercel.app** (Vercel, proyek `bahasa-kita`, tim SATYA). Halaman uji Fase 0: `/spike.html`.
+> Nama `bahasa-kita.vercel.app` sudah dipakai pihak lain, sehingga Vercel memberi akhiran `-sigma`.
+
 ## Coba prototype (tanpa server)
 Buka **`prototype/prototype.html`** di Chrome (desktop atau Android). File ini mandiri:
 - **Mode Gratis (default):** tidak perlu API key. Ucapan dan ketikan diterjemahkan oleh layanan publik MyMemory (kualitas dasar, tanpa konteks situasi). Frasa cepat ke Inggris memakai contoh terjemahan siap pakai.
@@ -54,7 +58,7 @@ Audio diproses oleh layanan pengenalan suara browser (Google untuk Chrome). Teks
 | Fase | Isi | Status |
 |---|---|---|
 | 0 | Spike teknis: `public/spike.html` + [template hasil](docs/fase-0-hasil-uji.md) | 🟡 Halaman siap, **menunggu uji di HP Android** |
-| 1 | Struktur repo, `CLAUDE.md`, `vercel.json` | 🟡 Siap, **menunggu koneksi Vercel + API key** |
+| 1 | Struktur repo, `CLAUDE.md`, `vercel.json` | 🟡 Ter-deploy di Vercel; **`ANTHROPIC_API_KEY` belum diisi** |
 | 2 | `/api/translate`, prompt, validasi, rate limit, error, eval 64 kalimat | 🟡 Kode + unit test selesai, **eval dengan API key belum dijalankan** |
 | 3 | Alur inti satu arah + pengukuran latensi | ✅ Kode selesai (uji E2E headless) |
 | — | Revisi 1: tampilan disederhanakan; prototype mode gratis kini benar-benar menerjemahkan | ✅ |
