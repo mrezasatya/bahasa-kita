@@ -47,7 +47,9 @@ button { cursor: pointer; }
 
 /* ---------- Panel ---------- */
 .panel { flex: 1 1 0; min-height: 0; display: flex; flex-direction: column; gap: 12px; padding: 16px; }
-.panel.partner { background: var(--partner-bg); color: var(--partner-fg); transform: rotate(180deg); }
+.panel.partner { background: var(--partner-bg); color: var(--partner-fg); }
+/* Opsional (⚙️): untuk HP yang diletakkan di meja di antara dua orang */
+.app.facing .panel.partner { transform: rotate(180deg); }
 .panel.me { flex-grow: 1.2; }
 
 .message { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; justify-content: center; gap: 10px; }
@@ -121,6 +123,8 @@ button { cursor: pointer; }
 .type-row .primary-btn { width: 52px; padding: 0; }
 
 .field { display: flex; flex-direction: column; gap: 4px; font-weight: 600; color: var(--muted); }
+.check-field { display: flex; gap: 10px; align-items: flex-start; font-size: 1rem; line-height: 1.4; }
+.check-field input { width: 22px; height: 22px; margin-top: 2px; flex: 0 0 auto; }
 .field select { min-height: 48px; border-radius: 12px; border: 2px solid var(--line); background: var(--bg); padding: 0 10px; font-size: 1.05rem; color: var(--fg); }
 
 .intro { align-items: center; }
@@ -208,6 +212,10 @@ button { cursor: pointer; }
       <label class="field">Bahasa saya
         <select id="myLang"></select>
       </label>
+      <label class="check-field">
+        <input type="checkbox" id="facingToggle">
+        <span><b>Mode berhadapan</b><br><span class="small">Layar atas diputar terbalik, untuk HP yang diletakkan di meja di antara Anda dan lawan bicara.</span></span>
+      </label>
       <div id="extSlot"></div>
       <button class="link-btn" id="aboutBtn" type="button">ⓘ Cara pakai, privasi & disclaimer</button>
     </div>
@@ -219,7 +227,7 @@ button { cursor: pointer; }
       <h2 id="introTitle">👋 Bahasa Kita</h2>
       <ol class="steps">
         <li><b>Tahan 🎤</b>, bicara, lepas.</li>
-        <li>Tunjukkan <b>layar atas</b> ke lawan bicara.</li>
+        <li>Tunjukkan <b>teks di bagian atas</b> ke lawan bicara.</li>
         <li>Cek kotak <b>“Artinya”</b>: sudah sesuai maksud Anda?</li>
         <li>Lawan bicara menjawab dengan <b>tombol di sisinya</b>.</li>
       </ol>
@@ -941,6 +949,13 @@ function renderPhrases() {
   }
 }
 
+/** Mode berhadapan: panel lawan bicara diputar 180°. Default mati (teks tidak terbalik). */
+function setFacing(on) {
+  $("app").classList.toggle("facing", on);
+  $("facingToggle").checked = on;
+  store.set("bk_facing", on ? "1" : "0");
+}
+
 function openSheet(id) { $(id).hidden = false; }
 function closeSheet(id) { $(id).hidden = true; }
 
@@ -961,6 +976,7 @@ function bindControls() {
     setLanguages(v, v === state.partnerLang ? state.myLang : state.partnerLang);
   });
   $("settingsBtn").addEventListener("click", () => openSheet("settingsSheet"));
+  $("facingToggle").addEventListener("change", (e) => setFacing(e.target.checked));
   $("aboutBtn").addEventListener("click", () => { closeSheet("settingsSheet"); openSheet("introSheet"); });
   $("phrasesBtn").addEventListener("click", () => { renderPhrases(); openSheet("phrasesSheet"); });
   $("replayBtn").addEventListener("click", () => {
@@ -1017,6 +1033,7 @@ async function init() {
 
   renderSituations();
   bindControls();
+  setFacing(store.get("bk_facing") === "1");
   setLanguages(state.myLang, state.partnerLang);
 
   if (synth) {

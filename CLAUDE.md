@@ -54,7 +54,8 @@ docs/              hasil uji Fase 0, deploy, QA, protokol uji pengguna
 
 ## Prinsip UI (revisi 1, masukan pemilik: "terlalu banyak tombol dan tulisan")
 - Layar utama hanya: panel lawan bicara (teks besar + 1 tombol), bilah bahasa (Indonesia → [bahasa lawan] + ⚙️), panel saya (teks + kotak "Artinya" + 🔊 🎤 💬).
-- Fitur sekunder masuk sheet: 💬 = situasi + frasa cepat + ketik; ⚙️ = bahasa saya + mesin prototype + info.
+- Fitur sekunder masuk sheet: 💬 = situasi + frasa cepat + ketik; ⚙️ = bahasa saya + mode berhadapan + mesin prototype + info.
+- Revisi 2: panel lawan bicara **tidak diputar** secara default (pemilik terganggu dengan teks terbalik). Rotasi 180° hanya lewat ⚙️ "Mode berhadapan" (kelas `.app.facing`, disimpan di `bk_facing`).
 - "Giliran lawan bicara" = tombol 🎤 di panel atas (tidak ada tombol giliran terpisah). Tombol tukar bahasa dihapus.
 - Jangan menambah elemen ke layar utama tanpa alasan kuat.
 - Prototype tidak boleh "menerjemahkan" dengan menggemakan teks asli. Mode gratis memakai MyMemory, mode Claude memakai API key.

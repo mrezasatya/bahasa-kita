@@ -468,6 +468,13 @@ function renderPhrases() {
   }
 }
 
+/** Mode berhadapan: panel lawan bicara diputar 180°. Default mati (teks tidak terbalik). */
+function setFacing(on) {
+  $("app").classList.toggle("facing", on);
+  $("facingToggle").checked = on;
+  store.set("bk_facing", on ? "1" : "0");
+}
+
 function openSheet(id) { $(id).hidden = false; }
 function closeSheet(id) { $(id).hidden = true; }
 
@@ -488,6 +495,7 @@ function bindControls() {
     setLanguages(v, v === state.partnerLang ? state.myLang : state.partnerLang);
   });
   $("settingsBtn").addEventListener("click", () => openSheet("settingsSheet"));
+  $("facingToggle").addEventListener("change", (e) => setFacing(e.target.checked));
   $("aboutBtn").addEventListener("click", () => { closeSheet("settingsSheet"); openSheet("introSheet"); });
   $("phrasesBtn").addEventListener("click", () => { renderPhrases(); openSheet("phrasesSheet"); });
   $("replayBtn").addEventListener("click", () => {
@@ -544,6 +552,7 @@ async function init() {
 
   renderSituations();
   bindControls();
+  setFacing(store.get("bk_facing") === "1");
   setLanguages(state.myLang, state.partnerLang);
 
   if (synth) {

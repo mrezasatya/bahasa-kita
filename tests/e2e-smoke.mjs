@@ -83,10 +83,16 @@ await page.click("#typeForm button[type=submit]");
 await page.waitForFunction(() => document.getElementById("partnerBig").textContent.length > 0);
 console.log("Ketik:", await text("partnerBig"));
 
-// 5) Pengaturan
+// 5) Pengaturan: default tidak terbalik; mode berhadapan memutar panel atas
+const rot = () => page.evaluate(() => getComputedStyle(document.getElementById("partnerPanel")).transform);
+if ((await rot()) !== "none") errors.push("Panel lawan bicara terbalik secara default");
 await page.click("#settingsBtn");
 await page.screenshot({ path: `${shotDir}/${tag}-06-pengaturan.png` });
+await page.check("#facingToggle");
+if ((await rot()) === "none") errors.push("Mode berhadapan tidak memutar panel");
+await page.uncheck("#facingToggle");
 await page.click("#settingsSheet [data-close]");
+console.log("Mode berhadapan: default normal, opsi berfungsi");
 
 // 6) Error jaringan
 await page.route(isProto ? "https://api.mymemory.translated.net/**" : "**/api/translate", (r) => r.abort());

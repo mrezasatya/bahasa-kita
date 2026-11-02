@@ -15,7 +15,7 @@ Buka **`prototype/prototype.html`** di Chrome (desktop atau Android). File ini m
 Layar utama hanya berisi: bahasa lawan bicara, satu tombol 🎤 besar, 🔊 (putar ulang), dan 💬 (frasa cepat, situasi, ketik).
 1. Pilih **bahasa lawan bicara** di bilah tengah.
 2. **Tahan** tombol 🎤, bicara, lalu lepas. Atau **ketuk sekali**, dan aplikasi berhenti otomatis saat Anda jeda.
-3. Tunjukkan layar **bagian atas** (sudah diputar 180°) ke lawan bicara. Suara diputar otomatis.
+3. Tunjukkan teks di **bagian atas** ke lawan bicara. Suara diputar otomatis. Bila HP diletakkan di meja di antara dua orang, aktifkan **Mode berhadapan** di ⚙️ agar bagian atas terbaca dari seberang.
 4. Periksa kotak hijau **"Artinya"** (terjemahan balik): sudah sesuai maksud Anda?
 5. Giliran lawan bicara: ia menekan tombol di sisinya (atas) untuk menjawab.
 6. **💬** membuka situasi + frasa cepat + kolom ketik. **⚙️** berisi bahasa saya dan info privasi.
@@ -58,6 +58,7 @@ Audio diproses oleh layanan pengenalan suara browser (Google untuk Chrome). Teks
 | 2 | `/api/translate`, prompt, validasi, rate limit, error, eval 64 kalimat | 🟡 Kode + unit test selesai, **eval dengan API key belum dijalankan** |
 | 3 | Alur inti satu arah + pengukuran latensi | ✅ Kode selesai (uji E2E headless) |
 | — | Revisi 1: tampilan disederhanakan; prototype mode gratis kini benar-benar menerjemahkan | ✅ |
+| — | Revisi 2: teks lawan bicara tidak lagi terbalik secara default; rotasi 180° jadi opsi "Mode berhadapan" di ⚙️ | ✅ |
 | 4 | Layar terbagi, giliran, situasi, frasa cepat | ✅ Kode selesai (uji E2E headless) |
 | 5 | Error ramah, fallback TTS, disclaimer & privasi, UI besar | ✅ Kode selesai |
 | 6 | [Checklist QA](docs/qa-checklist.md) di HP, deploy final | ⏳ Butuh HP Android |

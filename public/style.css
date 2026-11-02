@@ -37,7 +37,9 @@ button { cursor: pointer; }
 
 /* ---------- Panel ---------- */
 .panel { flex: 1 1 0; min-height: 0; display: flex; flex-direction: column; gap: 12px; padding: 16px; }
-.panel.partner { background: var(--partner-bg); color: var(--partner-fg); transform: rotate(180deg); }
+.panel.partner { background: var(--partner-bg); color: var(--partner-fg); }
+/* Opsional (⚙️): untuk HP yang diletakkan di meja di antara dua orang */
+.app.facing .panel.partner { transform: rotate(180deg); }
 .panel.me { flex-grow: 1.2; }
 
 .message { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; justify-content: center; gap: 10px; }
@@ -111,6 +113,8 @@ button { cursor: pointer; }
 .type-row .primary-btn { width: 52px; padding: 0; }
 
 .field { display: flex; flex-direction: column; gap: 4px; font-weight: 600; color: var(--muted); }
+.check-field { display: flex; gap: 10px; align-items: flex-start; font-size: 1rem; line-height: 1.4; }
+.check-field input { width: 22px; height: 22px; margin-top: 2px; flex: 0 0 auto; }
 .field select { min-height: 48px; border-radius: 12px; border: 2px solid var(--line); background: var(--bg); padding: 0 10px; font-size: 1.05rem; color: var(--fg); }
 
 .intro { align-items: center; }

@@ -5,7 +5,8 @@ Uji di HP Android + Chrome (catat model HP dan versi Android). Centang bila lulu
 ## Alur inti
 - [ ] Layar awal (disclaimer & privasi) muncul pada kunjungan pertama, dan bisa dibuka lagi lewat ⚙️ → "Cara pakai, privasi & disclaimer"
 - [ ] Izin mikrofon diminta, dan setelah diizinkan alur berjalan
-- [ ] Tahan-bicara-lepas: transkrip → terjemahan teks besar (atas, diputar 180°) → suara → terjemahan balik (bawah)
+- [ ] Tahan-bicara-lepas: transkrip → terjemahan teks besar (atas, tidak terbalik) → suara → terjemahan balik (bawah)
+- [ ] ⚙️ Mode berhadapan: panel atas terbalik 180°, dan pilihan tersimpan setelah halaman dimuat ulang
 - [ ] Ketuk sekali: mendengar sampai jeda sekitar 2 detik lalu berhenti otomatis. Ketuk lagi untuk berhenti manual
 - [ ] Tombol 🔊 memutar ulang suara terjemahan
 - [ ] Pilihan bahasa (bilah tengah & ⚙️) tersimpan setelah halaman dimuat ulang
