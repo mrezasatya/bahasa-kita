@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Spike Fase 0 — Uji HP</title>
+<style>
+  :root { --line:#d1d5db; --muted:#4b5563; --ok:#047857; --bad:#b91c1c; --accent:#e8590c; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: system-ui, Roboto, "Noto Sans", sans-serif; background:#fff; color:#111827; }
+  main { max-width: 640px; margin: 0 auto; padding: 16px; }
+  h1 { font-size: 1.3rem; margin: 0 0 4px; }
+  h2 { font-size: 1.05rem; margin: 20px 0 8px; }
+  p, li { line-height: 1.45; }
+  .muted { color: var(--muted); font-size: .92rem; }
+  .env { background:#f3f4f6; border-radius:12px; padding:10px 12px; font-size:.9rem; }
+  .env b.ok { color: var(--ok); } .env b.bad { color: var(--bad); }
+  .card { border:2px solid var(--line); border-radius:14px; padding:12px; margin:10px 0; }
+  .card h3 { margin:0 0 4px; font-size:1.05rem; display:flex; justify-content:space-between; gap:8px; }
+  .sample { font-size:1.15rem; margin:6px 0 2px; }
+  .roman { color: var(--muted); font-size:.9rem; margin:0 0 8px; }
+  .row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  button { font: inherit; min-height:44px; padding:0 14px; border-radius:999px; border:2px solid var(--line); background:#f9fafb; font-weight:600; }
+  button.primary { background: var(--accent); border-color: var(--accent); color:#fff; }
+  button.rec { background:#dc2626; border-color:#dc2626; color:#fff; }
+  .out { margin:8px 0 0; padding:8px 10px; background:#f9fafb; border-radius:10px; min-height:2.2em; font-size:1rem; }
+  .verdict { display:flex; gap:12px; flex-wrap:wrap; margin-top:8px; font-size:.95rem; }
+  .verdict label { display:flex; gap:4px; align-items:center; }
+  .voice-info { font-size:.85rem; color: var(--muted); margin-top:4px; }
+  .score { font-size:.85rem; font-weight:700; }
+  input[type=text] { width:100%; min-height:40px; border-radius:10px; border:2px solid var(--line); padding:0 10px; font: inherit; margin-top:6px; }
+  table { border-collapse: collapse; width:100%; font-size:.85rem; }
+  td, th { border:1px solid var(--line); padding:4px 6px; text-align:left; vertical-align:top; }
+  textarea { width:100%; min-height:180px; font: .8rem ui-monospace, monospace; border-radius:10px; border:2px solid var(--line); padding:8px; }
+  .pill { font-size:.75rem; padding:2px 8px; border-radius:999px; background:#e5e7eb; font-weight:700; }
+  .pill.ok { background:#d1fae5; color: var(--ok); } .pill.bad { background:#fee2e2; color: var(--bad); }
+</style>
+</head>
+<body>
+<main>
+  <h1>🔬 Spike Fase 0 — Uji kemampuan HP</h1>
+  <p class="muted">Buka halaman ini di <b>HP Android dengan Chrome</b>. Untuk tiap bahasa: (1) tekan <b>🎤 Uji STT</b> lalu bacakan kalimat contoh, (2) tekan <b>🔊 Uji TTS</b> dan dengarkan suaranya, (3) isi penilaian. Di akhir, salin tabel hasilnya.</p>
+
+  <div class="env" id="env"></div>
+
+  <h2>Daftar voice TTS di perangkat ini (<span id="voiceCount">0</span>)</h2>
+  <p class="muted">Daftar ini bisa terlambat muncul di Android. Tekan tombol di bawah bila masih kosong.</p>
+  <div class="row"><button id="reloadVoices" type="button">🔄 Muat ulang daftar voice</button></div>
+  <div style="max-height:220px;overflow:auto;margin-top:8px"><table id="voiceTable"><thead><tr><th>#</th><th>lang</th><th>nama</th><th>lokal?</th></tr></thead><tbody></tbody></table></div>
+
+  <h2>Uji per bahasa</h2>
+  <div id="cards"></div>
+
+  <h2>Hasil (Markdown)</h2>
+  <p class="muted">Salin tabel ini ke <code>docs/fase-0-hasil-uji.md</code> atau kirim ke Claude Code untuk finalisasi daftar bahasa.</p>
+  <div class="row">
+    <input id="device" type="text" placeholder="Model HP & versi Android, mis. Samsung A54 / Android 14">
+  </div>
+  <div class="row" style="margin-top:8px"><button class="primary" id="copyBtn" type="button">📋 Salin hasil</button><button id="resetBtn" type="button">Hapus semua penilaian</button></div>
+  <textarea id="md" readonly></textarea>
+</main>
+
+<script>
+const LANGS = [
+  { code:"id", name:"Indonesia", stt:"id-ID", tts:"id-ID", sample:"Selamat pagi, terima kasih banyak.", roman:"" },
+  { code:"en", name:"Inggris", stt:"en-US", tts:"en-US", sample:"Good morning, thank you very much.", roman:"" },
+  { code:"ar", name:"Arab", stt:"ar-SA", tts:"ar-SA", sample:"صباح الخير، شكراً جزيلاً.", roman:"sabāḥ al-khayr, shukran jazīlan" },
+  { code:"ja", name:"Jepang", stt:"ja-JP", tts:"ja-JP", sample:"おはようございます。どうもありがとうございます。", roman:"ohayō gozaimasu. dōmo arigatō gozaimasu" },
+  { code:"ko", name:"Korea", stt:"ko-KR", tts:"ko-KR", sample:"안녕하세요. 정말 감사합니다.", roman:"annyeonghaseyo. jeongmal gamsahamnida" },
+  { code:"zh", name:"Mandarin", stt:"zh-CN", tts:"zh-CN", sample:"早上好，非常感谢。", roman:"zǎoshang hǎo, fēicháng gǎnxiè" },
+  { code:"th", name:"Thai", stt:"th-TH", tts:"th-TH", sample:"สวัสดีตอนเช้า ขอบคุณมาก", roman:"sawatdee ton chao, khop khun mak" },
+  { code:"fr", name:"Prancis", stt:"fr-FR", tts:"fr-FR", sample:"Bonjour, merci beaucoup.", roman:"" },
+  { code:"es", name:"Spanyol", stt:"es-ES", tts:"es-ES", sample:"Buenos días, muchas gracias.", roman:"" },
+  { code:"de", name:"Jerman", stt:"de-DE", tts:"de-DE", sample:"Guten Morgen, vielen Dank.", roman:"" },
+  { code:"tr", name:"Turki", stt:"tr-TR", tts:"tr-TR", sample:"Günaydın, çok teşekkür ederim.", roman:"" },
+];
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+const synth = window.speechSynthesis || null;
+const KEY = "bk_spike_v1";
+let results = {};
+try { results = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch { results = {}; }
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(results)); } catch {} render(); };
+let voices = [];
+
+const norm = (s) => String(s||"").replace("_","-").toLowerCase();
+function findVoice(tag) {
+  const t = norm(tag), p = t.split("-")[0], acc = p === "zh" ? ["zh","cmn","yue"] : [p];
+  return voices.find(v => norm(v.lang) === t) || voices.find(v => acc.includes(norm(v.lang).split("-")[0])) || null;
+}
+
+// Kemiripan teks (0-100) untuk membantu menilai hasil STT.
+function similarity(a, b) {
+  const clean = s => s.toLowerCase().replace(/[\s.,!?、。，！？؛،]/g, "");
+  a = clean(a); b = clean(b);
+  if (!a || !b) return 0;
+  const m = a.length, n = b.length, d = Array.from({length:m+1}, (_, i) => [i, ...Array(n).fill(0)]);
+  for (let j = 1; j <= n; j++) d[0][j] = j;
+  for (let i = 1; i <= m; i++) for (let j = 1; j <= n; j++)
+    d[i][j] = Math.min(d[i-1][j]+1, d[i][j-1]+1, d[i-1][j-1] + (a[i-1] === b[j-1] ? 0 : 1));
+  return Math.round(100 * (1 - d[m][n] / Math.max(m, n)));
+}
+
+function env() {
+  const ua = navigator.userAgent;
+  const isAndroid = /Android/.test(ua), isChrome = /Chrome\//.test(ua) && !/EdgA|SamsungBrowser|OPR/.test(ua);
+  document.getElementById("env").innerHTML = `
+    <div>SpeechRecognition: <b class="${SR ? "ok":"bad"}">${SR ? "tersedia" : "TIDAK tersedia"}</b></div>
+    <div>SpeechSynthesis: <b class="${synth ? "ok":"bad"}">${synth ? "tersedia" : "TIDAK tersedia"}</b></div>
+    <div>Perangkat: <b class="${isAndroid && isChrome ? "ok":"bad"}">${isAndroid ? "Android" : "bukan Android"} · ${isChrome ? "Chrome" : "bukan Chrome"}</b></div>
+    <div>Koneksi: <b class="${navigator.onLine ? "ok":"bad"}">${navigator.onLine ? "online" : "offline"}</b> · HTTPS: <b class="${isSecureContext ? "ok":"bad"}">${isSecureContext ? "ya" : "tidak (mikrofon bisa diblokir)"}</b></div>
+    <div class="muted" style="margin-top:4px">${ua}</div>`;
+}
+
+function loadVoices() {
+  voices = synth ? synth.getVoices() : [];
+  document.getElementById("voiceCount").textContent = voices.length;
+  const tb = document.querySelector("#voiceTable tbody");
+  tb.innerHTML = voices.map((v, i) => `<tr><td>${i+1}</td><td>${v.lang}</td><td>${v.name}</td><td>${v.localService ? "ya" : "tidak"}</td></tr>`).join("");
+  render();
+}
+
+function testStt(l, btn, out) {
+  if (!SR) { out.textContent = "SpeechRecognition tidak tersedia di browser ini."; return; }
+  const rec = new SR();
+  rec.lang = l.stt; rec.interimResults = true; rec.continuous = false; rec.maxAlternatives = 1;
+  let finalText = "", err = null;
+  const t0 = performance.now();
+  btn.textContent = "⏹ Mendengarkan… (bicara sekarang)"; btn.classList.add("rec");
+  rec.onresult = (e) => { finalText = Array.from(e.results).map(r => r[0].transcript).join(" "); out.textContent = finalText; };
+  rec.onerror = (e) => { err = e.error; };
+  rec.onend = () => {
+    btn.textContent = "🎤 Uji STT"; btn.classList.remove("rec");
+    const ms = Math.round(performance.now() - t0);
+    const sim = similarity(finalText, l.sample);
+    const r = results[l.code] = results[l.code] || {};
+    r.sttText = finalText; r.sttError = err; r.sttSim = sim; r.sttMs = ms;
+    if (r.stt == null) r.stt = finalText && sim >= 60 ? "ya" : (err ? "tidak" : r.stt ?? null);
+    out.textContent = finalText ? `${finalText}` : `(tidak ada teks${err ? " — error: " + err : ""})`;
+    save();
+  };
+  btn.onclick = () => rec.stop();
+  try { rec.start(); } catch (e) { out.textContent = "Gagal memulai: " + e.message; }
+}
+
+function testTts(l, info) {
+  if (!synth) { info.textContent = "SpeechSynthesis tidak tersedia."; return; }
+  synth.cancel();
+  const u = new SpeechSynthesisUtterance(l.sample);
+  u.lang = l.tts;
+  const v = findVoice(l.tts);
+  if (v) u.voice = v;
+  const r = results[l.code] = results[l.code] || {};
+  const t0 = performance.now();
+  u.onstart = () => { r.ttsStartMs = Math.round(performance.now() - t0); info.textContent = `Memutar dengan voice: ${v ? v.name + " (" + v.lang + ")" : "default (tidak ada voice khusus)"}`; save(); };
+  u.onerror = (e) => { info.textContent = "Error TTS: " + e.error; r.ttsError = e.error; save(); };
+  synth.speak(u);
+}
+
+function render() {
+  const wrap = document.getElementById("cards");
+  if (!wrap.childElementCount) {
+    for (const l of LANGS) {
+      const c = document.createElement("div");
+      c.className = "card"; c.id = "card-" + l.code;
+      c.innerHTML = `
+        <h3><span>${l.name} <span class="muted">(${l.stt})</span></span><span class="pill" data-voice></span></h3>
+        <p class="sample" dir="auto">${l.sample}</p>
+        ${l.roman ? `<p class="roman">Cara baca: ${l.roman}</p>` : ""}
+        <div class="row"><button type="button" data-stt>🎤 Uji STT</button><button type="button" data-tts>🔊 Uji TTS</button></div>
+        <p class="out" data-out dir="auto"></p>
+        <div class="score" data-score></div>
+        <div class="voice-info" data-vinfo></div>
+        <div class="verdict">
+          <span>STT berhasil?</span>
+          <label><input type="radio" name="stt-${l.code}" value="ya">ya</label>
+          <label><input type="radio" name="stt-${l.code}" value="tidak">tidak</label>
+          <span style="margin-left:8px">Suara TTS bagus?</span>
+          <label><input type="radio" name="tts-${l.code}" value="ya">ya</label>
+          <label><input type="radio" name="tts-${l.code}" value="tidak">tidak</label>
+        </div>
+        <input type="text" data-note placeholder="Catatan (mis. aksen, kecepatan, salah kata)">`;
+      const out = c.querySelector("[data-out]");
+      c.querySelector("[data-stt]").addEventListener("click", (e) => testStt(l, e.currentTarget, out));
+      c.querySelector("[data-tts]").addEventListener("click", () => testTts(l, c.querySelector("[data-vinfo]")));
+      c.querySelectorAll("input[type=radio]").forEach((inp) => inp.addEventListener("change", () => {
+        const r = results[l.code] = results[l.code] || {};
+        r[inp.name.split("-")[0]] = inp.value; save();
+      }));
+      c.querySelector("[data-note]").addEventListener("input", (e) => {
+        const r = results[l.code] = results[l.code] || {}; r.note = e.target.value; save();
+      });
+      wrap.appendChild(c);
+    }
+  }
+  for (const l of LANGS) {
+    const c = document.getElementById("card-" + l.code), r = results[l.code] || {};
+    const v = findVoice(l.tts);
+    const pill = c.querySelector("[data-voice]");
+    pill.textContent = voices.length ? (v ? "voice: ada" : "voice: TIDAK ada") : "voice: ?";
+    pill.className = "pill " + (voices.length ? (v ? "ok" : "bad") : "");
+    if (r.sttText != null && !c.querySelector("[data-out]").textContent) c.querySelector("[data-out]").textContent = r.sttText;
+    c.querySelector("[data-score]").textContent = r.sttSim != null ? `Kemiripan dengan kalimat contoh: ${r.sttSim}%${r.sttError ? " · error: " + r.sttError : ""}` : "";
+    for (const k of ["stt", "tts"]) {
+      const sel = c.querySelector(`input[name=${k}-${l.code}][value="${r[k]}"]`);
+      if (sel) sel.checked = true;
+    }
+    const note = c.querySelector("[data-note]");
+    if (document.activeElement !== note) note.value = r.note || "";
+  }
+  document.getElementById("md").value = markdown();
+}
+
+function markdown() {
+  const dev = document.getElementById("device").value || "(isi model HP)";
+  const lines = [
+    `Perangkat: ${dev}`,
+    `Browser: ${navigator.userAgent}`,
+    `Tanggal uji: ${new Date().toISOString().slice(0, 10)} · Jumlah voice TTS: ${voices.length}`,
+    "",
+    "| Bahasa | STT berhasil | Kemiripan STT | Voice TTS tersedia | Kualitas TTS | Catatan |",
+    "|---|---|---|---|---|---|",
+  ];
+  for (const l of LANGS) {
+    const r = results[l.code] || {}, v = findVoice(l.tts);
+    lines.push(`| ${l.name} (${l.code}) | ${r.stt ?? "-"} | ${r.sttSim != null ? r.sttSim + "%" : "-"} | ${voices.length ? (v ? "ya — " + v.name : "tidak") : "?"} | ${r.tts ?? "-"} | ${(r.note || "").replace(/\|/g, "/")}${r.sttError ? " (STT error: " + r.sttError + ")" : ""} |`);
+  }
+  return lines.join("\n");
+}
+
+document.getElementById("reloadVoices").addEventListener("click", loadVoices);
+document.getElementById("device").addEventListener("input", render);
+document.getElementById("copyBtn").addEventListener("click", async () => {
+  const md = markdown();
+  try { await navigator.clipboard.writeText(md); alert("Hasil disalin ke clipboard."); }
+  catch { const t = document.getElementById("md"); t.select(); document.execCommand("copy"); alert("Hasil disalin."); }
+});
+document.getElementById("resetBtn").addEventListener("click", () => { if (confirm("Hapus semua penilaian?")) { results = {}; save(); location.reload(); } });
+window.addEventListener("online", env); window.addEventListener("offline", env);
+
+env();
+render();
+loadVoices();
+if (synth) synth.addEventListener?.("voiceschanged", loadVoices);
+</script>
+</body>
+</html>
